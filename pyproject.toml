@@ -1,0 +1,15 @@
+[project]
+name = "intel-backend"
+version = "0.1.0"
+description = "Jamaica Police Intelligence System Backend"
+authors = [
+    {name = "Your Team"}
+]
+readme = "README.md"
+requires-python = "^3.9"
+dependencies = [
+    "numpy (>=1.23.0,<2.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "pydantic-settings (>=2.8.1,<3.0.0)"
+]
