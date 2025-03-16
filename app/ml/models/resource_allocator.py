@@ -63,3 +63,72 @@ class ResourceAllocator:
                 total_allocated += 1
         
         return allocation
+        
+    def generate_recommendations(self, db: Session) -> Dict[int, int]:
+        """
+        Generate recommended officer allocations that strictly sum to total_officers
+        """
+        # Get total officers from database
+        total_officers_setting = db.query(SystemSettings).filter(SystemSettings.key == "total_officers").first()
+        if total_officers_setting:
+            self.total_officers = int(total_officers_setting.value)
+        
+        # Get all parishes with their crime levels
+        parishes = db.query(Parish).all()
+        parish_ids = [parish.id for parish in parishes]
+        crime_levels = [parish.current_crime_level for parish in parishes]
+        
+        # Calculate raw recommendations (unconstrained)
+        raw_recommendations = {}
+        min_per_parish = self.min_officers_per_parish
+        
+        # Ensure we have valid crime data
+        if not crime_levels or all(level == 0 for level in crime_levels):
+            officers_per_parish = self.total_officers // len(parishes)
+            return {parish_id: officers_per_parish for parish_id in parish_ids}
+        
+        # Calculate ideal allocation based on crime levels
+        total_crime = sum(crime_levels)
+        for i, parish_id in enumerate(parish_ids):
+            if total_crime > 0:
+                proportion = crime_levels[i] / total_crime
+                # Still ensure minimum officers per parish
+                raw_recommendations[parish_id] = max(
+                    min_per_parish, 
+                    int(self.total_officers * proportion)
+                )
+            else:
+                raw_recommendations[parish_id] = min_per_parish
+        
+        # Now enforce the constraint that total must equal self.total_officers
+        # First, make sure each parish gets at least the minimum
+        constrained_recommendations = {pid: min_per_parish for pid in parish_ids}
+        remaining = self.total_officers - (min_per_parish * len(parishes))
+        
+        # Calculate proportional distribution of remaining officers
+        if remaining > 0 and total_crime > 0:
+            for i, parish_id in enumerate(parish_ids):
+                proportion = crime_levels[i] / total_crime
+                constrained_recommendations[parish_id] += int(remaining * proportion)
+        
+        # Handle any rounding discrepancies
+        total_allocated = sum(constrained_recommendations.values())
+        diff = self.total_officers - total_allocated
+        
+        # Sort parishes by crime level for allocation adjustments
+        sorted_parishes = sorted(zip(parish_ids, crime_levels), key=lambda x: x[1], reverse=(diff > 0))
+        
+        # Distribute any remaining officers or remove excess ones
+        for parish_id, _ in sorted_parishes:
+            if diff == 0:
+                break
+            elif diff > 0:
+                constrained_recommendations[parish_id] += 1
+                diff -= 1
+            else:
+                # Only reduce if it doesn't go below minimum
+                if constrained_recommendations[parish_id] > min_per_parish:
+                    constrained_recommendations[parish_id] -= 1
+                    diff += 1
+        
+        return constrained_recommendations

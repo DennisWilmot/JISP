@@ -103,14 +103,23 @@ def allocate_resources(
     
     # Now allocate resources
     allocator = ResourceAllocator()
-    allocation = allocator.allocate_resources(db)
+    
+    # Get both recommendations and allocations
+    recommendations = allocator.generate_recommendations(db)
+    allocations = allocator.allocate_resources(db)
     
     # Update parish allocations in the database
-    for parish_id, officers in allocation.items():
+    for parish_id, officers in allocations.items():
         parish = db.query(Parish).filter(Parish.id == parish_id).first()
         if parish:
             parish.police_allocated = officers
     
     db.commit()
     
-    return allocation
+    return {
+        "recommendations": recommendations,
+        "allocations": allocations
+    }
+
+# Add to app/api/v1/endpoints/parishes.py
+
