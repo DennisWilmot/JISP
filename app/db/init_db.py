@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 
 from app.db.session import Base, engine
-from app.models.models import Parish
+from app.models.models import Parish, SystemSettings  # Added SystemSettings import
 
 def init_db(db: Session) -> None:
     # Create all tables
@@ -26,23 +26,6 @@ def init_db(db: Session) -> None:
             {"name": "St. Mary", "coordinates": {"lat": 18.3638, "lng": -76.9113}, "current_crime_level": 0, "police_allocated": 0},
             {"name": "Portland", "coordinates": {"lat": 18.1818, "lng": -76.4543}, "current_crime_level": 0, "police_allocated": 0},
             {"name": "St. Thomas", "coordinates": {"lat": 17.9877, "lng": -76.4772}, "current_crime_level": 0, "police_allocated": 0},
-        ]
-        
-        for parish_data in parishes:
-            parish = Parish(**parish_data)
-            db.add(parish)
-        
-        db.commit()
-
-def init_db(db: Session) -> None:
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-    
-    # Check if parishes already exist
-    if db.query(Parish).count() == 0:
-        # Add the 14 parishes of Jamaica with approximate coordinates
-        parishes = [
-            # Existing parish data...
         ]
         
         for parish_data in parishes:
