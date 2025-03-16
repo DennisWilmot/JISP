@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 
 from app.db.session import Base
 
+# This goes in app/models/models.py
 class Parish(Base):
     __tablename__ = "parishes"
     
@@ -13,6 +14,7 @@ class Parish(Base):
     coordinates = Column(JSON)  # JSONB in PostgreSQL
     current_crime_level = Column(Integer)
     police_allocated = Column(Integer)
+    recommended_allocation = Column(Integer)  # Add this new line
     
     # Relationships
     intelligence_items = relationship("Intelligence", back_populates="parish")
@@ -72,3 +74,20 @@ class SystemSettings(Base):
     value = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+# Add to app/models/models.py
+class ResourceAllocation(Base):
+    __tablename__ = "resource_allocations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    parish_id = Column(Integer, ForeignKey("parishes.id"))
+    recommended_officers = Column(Integer)
+    allocated_officers = Column(Integer)
+    crime_level = Column(Integer)
+    
+    # Relationships
+    parish = relationship("Parish", back_populates="allocations")
+
+# Update Parish model with relationship
+Parish.allocations = relationship("ResourceAllocation", back_populates="parish")

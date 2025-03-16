@@ -19,9 +19,10 @@ class ParishInDB(ParishBase):
     id: int
     current_crime_level: int = 0
     police_allocated: int = 0
+    recommended_allocation: int = 0  # Add this line
     
     class Config:
-        from_attributes = True  # Updated from orm_mode=True
+        from_attributes = True
 
 class Parish(ParishInDB):
     pass
@@ -30,3 +31,4 @@ class ParishWithStats(Parish):
     intelligence_count: int = 0
     average_severity: float = 0.0
     crime_trend: str = "stable"  # "increasing", "decreasing", or "stable"
+

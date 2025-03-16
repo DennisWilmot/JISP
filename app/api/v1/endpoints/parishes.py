@@ -113,6 +113,7 @@ def allocate_resources(
         parish = db.query(Parish).filter(Parish.id == parish_id).first()
         if parish:
             parish.police_allocated = officers
+            parish.recommended_allocation = recommendations.get(parish_id, 0)
     
     db.commit()
     
@@ -120,6 +121,3 @@ def allocate_resources(
         "recommendations": recommendations,
         "allocations": allocations
     }
-
-# Add to app/api/v1/endpoints/parishes.py
-
