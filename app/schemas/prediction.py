@@ -15,7 +15,7 @@ class PredictionInDB(PredictionBase):
     timestamp: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True  # Updated from orm_mode=True
 
 class Prediction(PredictionInDB):
     pass

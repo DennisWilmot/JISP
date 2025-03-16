@@ -21,7 +21,7 @@ class ParishInDB(ParishBase):
     police_allocated: int = 0
     
     class Config:
-        orm_mode = True
+        from_attributes = True  # Updated from orm_mode=True
 
 class Parish(ParishInDB):
     pass
