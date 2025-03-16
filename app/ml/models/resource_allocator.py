@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, List
 from sqlalchemy.orm import Session
 
-from app.models.models import Parish
+from app.models.models import Parish, SystemSettings  # Added SystemSettings import
 from app.core.config import settings
 
 class ResourceAllocator:
@@ -16,6 +16,14 @@ class ResourceAllocator:
         Allocate police officers across parishes based on crime levels
         Returns a dictionary mapping parish_id to officer count
         """
+        # Get total officers from database
+        total_officers_setting = db.query(SystemSettings).filter(SystemSettings.key == "total_officers").first()
+        if total_officers_setting:
+            self.total_officers = int(total_officers_setting.value)
+        else:
+            # Fall back to config setting if database value not found
+            self.total_officers = settings.TOTAL_OFFICERS
+            
         # Get all parishes with their crime levels
         parishes = db.query(Parish).all()
         

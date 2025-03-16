@@ -114,3 +114,18 @@ def allocate_resources(
     db.commit()
     
     return allocation
+
+# Add to app/api/v1/endpoints/parishes.py
+from app.services.allocation_service import execute_allocation_plan
+
+@router.post("/execute-allocation", response_model=Dict[int, int])
+async def execute_allocation(
+    allocation_plan: Dict[int, int],
+    db: Session = Depends(get_db)
+):
+    """Execute an allocation plan provided by admin"""
+    try:
+        result = await execute_allocation_plan(db, allocation_plan)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # ML Model settings
-    TOTAL_OFFICERS: int = 400
-    MIN_OFFICERS_PER_PARISH: int = 5
+    TOTAL_OFFICERS: int = 1000
+    MIN_OFFICERS_PER_PARISH: int = 30
     
     # Jamaica specific settings
     TOTAL_PARISHES: int = 14

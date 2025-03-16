@@ -8,7 +8,7 @@ class FeatureEngineer:
     def __init__(self):
         # Feature importance tracking for active learning
         self.feature_importance = {}
-    
+
     def extract_features(self, df: pd.DataFrame) -> Tuple[np.ndarray, List[str]]:
         """
         Enhanced feature extraction with more sophisticated transformations
@@ -42,12 +42,17 @@ class FeatureEngineer:
         # Drop non-numeric columns
         drop_columns = []
         for col in df_processed.columns:
-            if df_processed[col].dtype == 'object' or col == 'timestamp':
+            if df_processed[col].dtype == 'object' or df_processed[col].dtype.name == 'category' or col == 'timestamp':
                 drop_columns.append(col)
         
-        # Also drop the description column if it exists
-        if 'description' in df_processed.columns:
-            drop_columns.append('description')
+        # Also drop specific columns that might cause issues
+        specific_drops = ['time_period', 'description']
+        for col in specific_drops:
+            if col in df_processed.columns:
+                drop_columns.append(col)
+        
+        # Remove duplicates from drop_columns
+        drop_columns = list(set(drop_columns))
             
         df_final = df_processed.drop(columns=drop_columns, errors='ignore')
         
@@ -60,6 +65,42 @@ class FeatureEngineer:
         feature_names = list(df_final.columns)
         
         return df_final.values, feature_names
+    
+
+    
+    def _add_temporal_features(self, df: pd.DataFrame) -> pd.DataFrame:
+                # Basic time components
+            df['hour'] = df['timestamp'].dt.hour
+            df['day'] = df['timestamp'].dt.day
+            df['day_of_week'] = df['timestamp'].dt.dayofweek
+            df['month'] = df['timestamp'].dt.month
+            
+            # Time of day features (using cyclic encoding to preserve continuity)
+            df['hour_sin'] = np.sin(2 * np.pi * df['hour']/24)
+            df['hour_cos'] = np.cos(2 * np.pi * df['hour']/24)
+            
+            # Day of week features (using cyclic encoding)
+            df['day_of_week_sin'] = np.sin(2 * np.pi * df['day_of_week']/7)
+            df['day_of_week_cos'] = np.cos(2 * np.pi * df['day_of_week']/7)
+            
+            # Is weekend
+            df['is_weekend'] = (df['day_of_week'] >= 5).astype(int)
+            
+            # Time period categories - Using numeric values instead of strings
+            time_periods = pd.cut(
+                df['hour'], 
+                bins=[0, 6, 12, 18, 24], 
+                labels=False,  # Use numeric labels (0, 1, 2, 3)
+                include_lowest=True
+            )
+            
+            # Create dummy variables directly
+            dummy_column_names = ['time_night', 'time_morning', 'time_afternoon', 'time_evening']
+            for i, name in enumerate(dummy_column_names):
+                df[name] = (time_periods == i).astype(int)
+            
+            return df
+   
     
     def _add_temporal_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add sophisticated temporal features"""

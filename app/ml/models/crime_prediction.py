@@ -99,3 +99,21 @@ class CrimePredictionModel:
         crime_level = int(min(100, max(0, avg_severity * 10)))
         
         return crime_level
+    def _save_model_to_db(self, db: Session, accuracy: float) -> None:
+        """Save the trained model to the database"""
+        # Serialize the model
+        model_binary = pickle.dumps(self.model)
+        
+        # Create model version entry
+        model_version = ModelVersion(
+            model_type="crime_prediction",
+            accuracy=accuracy,
+            features=self.features,
+            binary_data=model_binary
+        )
+        
+        db.add(model_version)
+        db.commit()
+        db.refresh(model_version)
+        
+        self.model_version = model_version.id

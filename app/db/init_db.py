@@ -33,3 +33,30 @@ def init_db(db: Session) -> None:
             db.add(parish)
         
         db.commit()
+
+def init_db(db: Session) -> None:
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
+    
+    # Check if parishes already exist
+    if db.query(Parish).count() == 0:
+        # Add the 14 parishes of Jamaica with approximate coordinates
+        parishes = [
+            # Existing parish data...
+        ]
+        
+        for parish_data in parishes:
+            parish = Parish(**parish_data)
+            db.add(parish)
+        
+        db.commit()
+    
+    # Initialize system settings if they don't exist
+    if db.query(SystemSettings).filter(SystemSettings.key == "total_officers").count() == 0:
+        total_officers = SystemSettings(
+            key="total_officers",
+            value="1000",
+            description="Total number of police officers available for allocation across parishes"
+        )
+        db.add(total_officers)
+        db.commit()
